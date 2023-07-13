@@ -12,10 +12,10 @@ enum OTPType{
     case Numeric
     case Alphabitic
 }
- 
+
 struct OTPConfiguration {
     var boxSize:CGFloat
-    var numberOfBoxes:Int
+    var numberOfBoxes:Int = 4
     var font:UIFont
     var type:OTPType = .Numeric
     var selectedColor:UIColor = .black
@@ -28,8 +28,8 @@ protocol OTPDidEnteredDelegate {
 
 class OTPView: UIView {
     
-    fileprivate let stack:UIStackView = {
-        let stack = UIStackView()
+    lazy var stack:UIStackView = {
+        let stack = UIStackView(frame: .zero)
         stack.axis = .horizontal
         stack.spacing = 8
         stack.distribution = .fillEqually
@@ -38,7 +38,7 @@ class OTPView: UIView {
         return stack
     }()
     fileprivate let ACCEPTABLE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    fileprivate var config:OTPConfiguration?
+    fileprivate var config:OTPConfiguration? = OTPConfiguration(boxSize: 50, font: UIFont.boldSystemFont(ofSize: 25))
     fileprivate var boxes:[UITextField] = []
     var delegate:OTPDidEnteredDelegate?
     var text:String?{
@@ -51,9 +51,6 @@ class OTPView: UIView {
     init(config:OTPConfiguration) {
         super.init(frame: .zero)
         self.config = config
-        for _ in 1...config.numberOfBoxes {
-            boxes.append(createBox(configurations: config))
-        }
         setupViews()
     }
     
@@ -65,19 +62,28 @@ class OTPView: UIView {
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setupViews()
-        
+        setupViews(isStoryboard: true)
     }
     
-    fileprivate func setupViews(){
+    func configure(config:OTPConfiguration){
+        self.config = config
+        setupViews()
+    }
+    
+    fileprivate func setupViews(isStoryboard:Bool = false){
         guard let config = self.config else {
             assertionFailure("view configurations required.")
             return
+        }
+        boxes.removeAll()
+        for _ in 1...config.numberOfBoxes {
+            boxes.append(createBox(configurations: config))
         }
         addSubview(stack)
         stack.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
         stack.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         
+        stack.removeFullyAllArrangedSubviews()
         for (index , box) in boxes.enumerated() {
             box.tag = index + 1
             stack.addArrangedSubview(box)
@@ -89,10 +95,11 @@ class OTPView: UIView {
             highligh(box: boxes[0])
         }
     }
+
     
     
     fileprivate func createBox(configurations:OTPConfiguration) -> Box{
-        let box = Box()
+        let box = Box(frame: CGRect(origin: .zero, size: CGSize(width: configurations.boxSize, height: configurations.boxSize)))
         box.isUserInteractionEnabled = true
         box.layer.masksToBounds = true
         box.font = configurations.font
@@ -102,6 +109,7 @@ class OTPView: UIView {
         box.layer.borderWidth = 1
         box.textAlignment = .center
         box.delegate = self
+        box.translatesAutoresizingMaskIntoConstraints = false
         box.keyboardType = configurations.type == .Numeric ? .phonePad : .default
         return box
     }
@@ -124,6 +132,14 @@ class OTPView: UIView {
         }
         return text
     }
+    
+    override class var requiresConstraintBasedLayout: Bool {
+        return true
+    }
+    
+    override var intrinsicContentSize: CGSize {
+            return stack.intrinsicContentSize
+        }
     
 }
 
@@ -173,4 +189,17 @@ class Box:UITextField {
     }
     
 }
-
+extension UIStackView {
+    
+    func removeFully(view: UIView) {
+        removeArrangedSubview(view)
+        view.removeFromSuperview()
+    }
+    
+    func removeFullyAllArrangedSubviews() {
+        arrangedSubviews.forEach { (view) in
+            removeFully(view: view)
+        }
+    }
+    
+}
