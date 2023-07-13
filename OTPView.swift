@@ -1,6 +1,6 @@
 //
 //  OTPView.swift
-//  
+//
 //
 //  Created by Ihab yasser on 12/07/2023.
 //
@@ -109,8 +109,9 @@ class OTPView: UIView {
         box.layer.borderWidth = 1
         box.textAlignment = .center
         box.delegate = self
+        box.textContentType = .oneTimeCode
         box.translatesAutoresizingMaskIntoConstraints = false
-        box.keyboardType = configurations.type == .Numeric ? .phonePad : .default
+        box.keyboardType = configurations.type == .Numeric ? .numberPad : .default
         return box
     }
     
