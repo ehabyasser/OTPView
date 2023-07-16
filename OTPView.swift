@@ -18,7 +18,7 @@ struct OTPConfiguration {
     var numberOfBoxes:Int = 4
     var font:UIFont
     var type:OTPType = .Numeric
-    var selectedColor:UIColor = .black
+    var selectedColor:UIColor = Colors.AccentColor
     var normalColor:UIColor = .gray
 }
 
@@ -91,8 +91,10 @@ class OTPView: UIView {
             box.heightAnchor.constraint(equalToConstant: config.boxSize).isActive = true
         }
         if boxes.count > 0 {
-            boxes[0].becomeFirstResponder()
-            highligh(box: boxes[0])
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3){
+                self.boxes[0].becomeFirstResponder()
+                self.highligh(box: self.boxes[0])
+            }
         }
     }
 
@@ -103,7 +105,7 @@ class OTPView: UIView {
         box.isUserInteractionEnabled = true
         box.layer.masksToBounds = true
         box.font = configurations.font
-        box.textColor = .label
+        box.textColor = configurations.selectedColor
         box.layer.cornerRadius = 4
         box.layer.borderColor = configurations.normalColor.cgColor
         box.layer.borderWidth = 1
@@ -183,6 +185,10 @@ extension OTPView : UITextFieldDelegate{
 }
 
 class Box:UITextField {
+    
+    override func layoutSubviews() {
+        textAlignment = .center
+    }
     
     override func deleteBackward() {
         super.deleteBackward()
